@@ -3,13 +3,20 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { StoryResponse, StorySegment } from "../types";
 
 const SYSTEM_INSTRUCTION = `
-You are 'Katha Sagar', a master director of Hindi Audio-Dramas. 
-Write stories rich in emotion and stable pacing.
+You are 'Katha Sagar', a master director of Audio-Dramas. 
+
+LANGUAGE RULE:
+Strictly write the story in the SAME LANGUAGE as the user's prompt. 
+- If the prompt is in Hindi, use Hindi.
+- If the prompt is in English, use English.
+- If the prompt is in Hinglish (Hindi written in Roman script), use Hinglish.
+- NEVER switch languages unless specifically asked.
 
 PACING & MIXTURE RULES:
-1. DIALOGUE BLOCKS: Characters engage in conversation for 2-3 segments back-to-back.
-2. STRATEGIC NARRATION: 'Sutradhar' appears after 2-3 dialogue segments to describe atmosphere/feelings.
-3. STRUCTURE: Use [ ] for sound effects and ( ) for acting cues.
+1. DIALOGUE BLOCKS: Characters should engage in a conversation for 2 to 3 segments back-to-back.
+2. STRATEGIC NARRATION: Use a 'Sutradhar' (Narrator) after blocks of dialogue to describe the scene, emotions, or transitions.
+3. PERFORMANCE CUES: Use parentheses ( ) for acting instructions and [ ] for ambient sound effects.
+4. EMOTION: Every segment must have a clearly defined emotion field.
 `;
 
 export const storySchema = {
@@ -24,7 +31,7 @@ export const storySchema = {
           id: { type: Type.STRING },
           type: { type: Type.STRING, enum: ['narration', 'dialogue', 'transition'] },
           content: { type: Type.STRING },
-          speaker: { type: Type.STRING },
+          speaker: { type: Type.STRING, description: "Character name or 'Sutradhar'" },
           emotion: { type: Type.STRING }
         },
         required: ['id', 'type', 'content', 'speaker', 'emotion']
@@ -39,9 +46,7 @@ export class StoryGenerator {
 
   private getAI() {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      throw new Error("API_KEY_MISSING");
-    }
+    if (!apiKey) throw new Error("API_KEY_MISSING");
     return new GoogleGenAI({ apiKey });
   }
 
@@ -61,32 +66,27 @@ export class StoryGenerator {
   }
 
   async startStory(initialPrompt: string): Promise<StoryResponse> {
-    try {
-      const chat = await this.getChat();
-      const response = await chat.sendMessage({ 
-        message: `विषय: ${initialPrompt}. कहानी शुरू करो। 2-3 संवादों के बाद सूत्रधार का वर्णन लाओ।` 
-      });
-      return JSON.parse(response.text || '{}');
-    } catch (error: any) {
-      throw error;
-    }
+    const chat = await this.getChat();
+    const response = await chat.sendMessage({ 
+      message: `Start a new story. Write it ENTIRELY in the language of this prompt: "${initialPrompt}". Use the 2-3 dialogue pacing rule.` 
+    });
+    return JSON.parse(response.text || '{}');
   }
 
   async continueStory(userPrompt: string): Promise<StoryResponse> {
-    try {
-      const chat = await this.getChat();
-      const response = await chat.sendMessage({ 
-        message: `कहानी आगे बढ़ाओ: ${userPrompt}` 
-      });
-      return JSON.parse(response.text || '{}');
-    } catch (error: any) {
-      throw error;
-    }
+    const chat = await this.getChat();
+    const response = await chat.sendMessage({ 
+      message: `Continue the story in the SAME language used before. Instruction: ${userPrompt}` 
+    });
+    return JSON.parse(response.text || '{}');
   }
 
   async generateStoryAudio(segments: StorySegment[]): Promise<string> {
     const ai = this.getAI();
-    const scriptText = segments.map(s => `${s.speaker || 'Sutradhar'}: ${s.content.replace(/\[.*?\]|\(.*?\)/g, '')}`).join('\n\n');
+    const scriptText = segments.map(s => {
+      const cleanContent = s.content.replace(/\[.*?\]|\(.*?\)/g, '').trim();
+      return `${s.speaker || 'Sutradhar'}: ${cleanContent}`;
+    }).join('\n\n');
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
@@ -94,18 +94,13 @@ export class StoryGenerator {
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
-          multiSpeakerVoiceConfig: {
-            speakerVoiceConfigs: [
-              { speaker: 'Sutradhar', voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
-              { speaker: 'Character', voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Puck' } } }
-            ]
-          }
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
         }
       }
     });
 
-    const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!data) throw new Error("Audio failed");
-    return data;
+    const base64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64) throw new Error("Audio generation failed");
+    return base64;
   }
 }
