@@ -1,16 +1,14 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { StoryResponse, StorySegment } from "../types";
+import { Language } from "../translations";
 
-const SYSTEM_INSTRUCTION = `
+const SYSTEM_INSTRUCTION = (targetLanguage: string) => `
 You are 'Katha Sagar', a master director of Audio-Dramas. 
 
 LANGUAGE RULE:
-Strictly write the story in the SAME LANGUAGE as the user's prompt. 
-- If the prompt is in Hindi, use Hindi.
-- If the prompt is in English, use English.
-- If the prompt is in Hinglish (Hindi written in Roman script), use Hinglish.
-- NEVER switch languages unless specifically asked.
+Write the story ENTIRELY in ${targetLanguage}. Use the native script of ${targetLanguage} correctly.
+NEVER switch languages unless specifically asked.
 
 PACING & MIXTURE RULES:
 1. DIALOGUE BLOCKS: Characters should engage in a conversation for 2 to 3 segments back-to-back.
@@ -18,6 +16,19 @@ PACING & MIXTURE RULES:
 3. PERFORMANCE CUES: Use parentheses ( ) for acting instructions and [ ] for ambient sound effects.
 4. EMOTION: Every segment must have a clearly defined emotion field.
 `;
+
+const LANGUAGE_NAME_MAP: Record<Language, string> = {
+  hi: 'Hindi', en: 'English', ur: 'Urdu', bn: 'Bengali', mr: 'Marathi',
+  te: 'Telugu', ta: 'Tamil', gu: 'Gujarati', kn: 'Kannada', pa: 'Punjabi',
+  es: 'Spanish', fr: 'French', zh: 'Chinese (Mandarin)', ja: 'Japanese', 
+  tr: 'Turkish', de: 'German', it: 'Italian', pt: 'Portuguese', ru: 'Russian', 
+  ar: 'Arabic', ko: 'Korean', vi: 'Vietnamese', th: 'Thai', id: 'Indonesian', 
+  nl: 'Dutch', pl: 'Polish', sv: 'Swedish', no: 'Norwegian', da: 'Danish', 
+  fi: 'Finnish', el: 'Greek', he: 'Hebrew', ro: 'Romanian', hu: 'Hungarian', 
+  cs: 'Czech', uk: 'Ukrainian', ms: 'Malay', ml: 'Malayalam', or: 'Odia', 
+  as: 'Assamese', bh: 'Bhojpuri', sa: 'Sanskrit', ne: 'Nepali', si: 'Sinhala', 
+  my: 'Burmese', km: 'Khmer', lo: 'Lao', am: 'Amharic', sw: 'Swahili', zu: 'Zulu'
+};
 
 export const storySchema = {
   type: Type.OBJECT,
@@ -43,6 +54,7 @@ export const storySchema = {
 
 export class StoryGenerator {
   private chat: any = null;
+  private currentLanguage: Language = 'hi';
 
   private getAI() {
     const apiKey = process.env.API_KEY;
@@ -50,13 +62,16 @@ export class StoryGenerator {
     return new GoogleGenAI({ apiKey });
   }
 
-  private async getChat() {
-    if (!this.chat) {
+  private async getChat(lang: Language) {
+    if (!this.chat || this.currentLanguage !== lang) {
+      this.currentLanguage = lang;
       const ai = this.getAI();
+      const langName = LANGUAGE_NAME_MAP[lang] || 'English';
+      
       this.chat = ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: SYSTEM_INSTRUCTION(langName),
           responseMimeType: "application/json",
           responseSchema: storySchema,
         }
@@ -65,18 +80,18 @@ export class StoryGenerator {
     return this.chat;
   }
 
-  async startStory(initialPrompt: string): Promise<StoryResponse> {
-    const chat = await this.getChat();
+  async startStory(initialPrompt: string, lang: Language): Promise<StoryResponse> {
+    const chat = await this.getChat(lang);
     const response = await chat.sendMessage({ 
-      message: `Start a new story. Write it ENTIRELY in the language of this prompt: "${initialPrompt}". Use the 2-3 dialogue pacing rule.` 
+      message: `User Topic: "${initialPrompt}". Language: ${LANGUAGE_NAME_MAP[lang]}. Craft the opening of the story.` 
     });
     return JSON.parse(response.text || '{}');
   }
 
-  async continueStory(userPrompt: string): Promise<StoryResponse> {
-    const chat = await this.getChat();
+  async continueStory(userPrompt: string, lang: Language): Promise<StoryResponse> {
+    const chat = await this.getChat(lang);
     const response = await chat.sendMessage({ 
-      message: `Continue the story in the SAME language used before. Instruction: ${userPrompt}` 
+      message: `Instruction for the next part: ${userPrompt}` 
     });
     return JSON.parse(response.text || '{}');
   }

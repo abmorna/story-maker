@@ -1,58 +1,62 @@
 
 import React from 'react';
 import { SparklesIcon, FireIcon, HeartIcon, MapIcon } from '@heroicons/react/24/outline';
+import { Language, allTranslations } from '../translations';
 
 interface Props {
   onStart: (prompt: string) => void;
   isLoading: boolean;
+  lang: Language;
 }
 
-const EmptyState: React.FC<Props> = ({ onStart, isLoading }) => {
-  const suggestions = [
-    { text: "पहाड़ों के एक सुनसान रिसॉर्ट की पहली रात", icon: <MapIcon className="h-5 w-5" />, color: "text-blue-500" },
-    { text: "पुरानी हवेली में शिफ्ट हुआ एक नया परिवार", icon: <SparklesIcon className="h-5 w-5" />, color: "text-purple-500" },
-    { text: "गाँव की वो कोठरी जहाँ 20 साल से ताला लगा है", icon: <FireIcon className="h-5 w-5" />, color: "text-orange-500" },
-    { text: "शहर की एक लिफ्ट जो आधी रात को अटक गई", icon: <HeartIcon className="h-5 w-5" />, color: "text-red-500" },
+const EmptyState: React.FC<Props> = ({ onStart, isLoading, lang }) => {
+  const t = allTranslations[lang];
+  const icons = [
+    <MapIcon className="h-5 w-5" />,
+    <SparklesIcon className="h-5 w-5" />,
+    <FireIcon className="h-5 w-5" />,
+    <HeartIcon className="h-5 w-5" />
   ];
+  const colors = ["text-indigo-400", "text-purple-400", "text-emerald-400", "text-rose-400"];
 
   return (
-    <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto text-center px-4 space-y-12 py-12">
-      <div className="space-y-6">
+    <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto text-center px-4 space-y-16 py-12">
+      <div className="space-y-8">
         <div className="relative inline-block">
-            <div className="absolute -inset-4 bg-orange-500/10 blur-2xl rounded-full animate-pulse"></div>
-            <div className="relative w-64 h-64 overflow-hidden rounded-3xl shadow-2xl border-4 border-white transform rotate-2 hover:rotate-0 transition-transform duration-500">
+            <div className="absolute -inset-10 bg-indigo-500/20 blur-[80px] rounded-full animate-pulse"></div>
+            <div className="relative w-64 h-64 overflow-hidden rounded-[40px] shadow-3xl border-2 border-white/10 transform -rotate-1 hover:rotate-0 transition-all duration-700 ring-1 ring-white/5">
                <img 
                 src="https://images.unsplash.com/photo-1505634467193-4b47000840bc?auto=format&fit=crop&q=80&w=400" 
-                alt="Eerie Atmosphere" 
-                className="w-full h-full object-cover"
+                alt="Story Atmosphere" 
+                className="w-full h-full object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-1000"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] to-transparent opacity-60"></div>
             </div>
         </div>
-        <h2 className="text-3xl md:text-4xl font-bold text-orange-950 hindi-font">
-          कथा सागर: हॉरर स्पेशल
-        </h2>
-        <p className="text-lg text-orange-800/70 font-medium hindi-font leading-relaxed">
-          सावधानी से कदम रखें... यहाँ कहानियाँ पहले आपका भरोसा जीतती हैं, फिर आपकी नींद उड़ाती हैं। एक 'लोकेशन' चुनें और शुरू करें।
-        </p>
+        <div className="space-y-4">
+          <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+            {t.emptyTitle}
+          </h2>
+          <p className="text-lg text-slate-400 font-medium leading-relaxed max-w-lg mx-auto">
+            {t.emptyDesc}
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-        {suggestions.map((item, idx) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full">
+        {t.suggestions.map((item, idx) => (
           <button
             key={idx}
             disabled={isLoading}
-            onClick={() => onStart(item.text)}
-            className="flex items-center justify-center space-x-3 p-4 bg-white/50 hover:bg-white rounded-2xl border border-orange-100 hover:shadow-lg hover:shadow-orange-100/50 transition-all text-left"
+            onClick={() => onStart(item)}
+            className="flex items-center space-x-5 p-6 bg-white/5 hover:bg-white/10 rounded-3xl border border-white/5 hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all text-left group"
           >
-            <span className={item.color}>{item.icon}</span>
-            <span className="font-bold text-gray-700 hindi-font">{item.text}</span>
+            <div className={`p-3 rounded-2xl bg-black/40 group-hover:scale-110 transition-transform ${colors[idx % colors.length]}`}>
+              {icons[idx % icons.length]}
+            </div>
+            <span className="font-bold text-slate-200 group-hover:text-white transition-colors">{item}</span>
           </button>
         ))}
-      </div>
-
-      <div className="text-sm text-gray-400 italic">
-        याद रखें: हॉरर कहानी में डर धीरे-धीरे बढ़ता है। कुछ भी लिखने के लिए नीचे टाइप करें।
       </div>
     </div>
   );

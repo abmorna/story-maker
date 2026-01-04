@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { StorySegment } from '../types';
 import StorySegmentItem from './StorySegmentItem';
+import { Language, allTranslations } from '../translations';
 
 interface StoryBoardProps {
   segments: StorySegment[];
@@ -9,10 +10,12 @@ interface StoryBoardProps {
   title?: string;
   onUpdateSegment: (id: string, content: string) => void;
   onDeleteSegment: (id: string) => void;
+  lang: Language;
 }
 
-const StoryBoard: React.FC<StoryBoardProps> = ({ segments, isLoading, title, onUpdateSegment, onDeleteSegment }) => {
+const StoryBoard: React.FC<StoryBoardProps> = ({ segments, isLoading, title, onUpdateSegment, onDeleteSegment, lang }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const t = allTranslations[lang];
 
   useEffect(() => {
     if (!isLoading) {
@@ -23,17 +26,17 @@ const StoryBoard: React.FC<StoryBoardProps> = ({ segments, isLoading, title, onU
   return (
     <div className="max-w-5xl mx-auto space-y-16 pb-60 pt-10">
       {title && (
-        <div className="text-center mb-24 space-y-6">
-          <div className="inline-block px-6 py-1.5 bg-orange-100 text-orange-700 text-[10px] font-black rounded-full uppercase tracking-[0.3em] shadow-sm">
-            एक नवीन गाथा
+        <div className="text-center mb-24 space-y-8">
+          <div className="inline-block px-8 py-2 bg-indigo-500/10 text-indigo-400 text-[10px] font-black rounded-full uppercase tracking-[0.5em] border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
+            {t.newSaga}
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold text-orange-950 hindi-font leading-tight tracking-tight drop-shadow-sm">
+          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight drop-shadow-2xl">
             {title}
           </h1>
-          <div className="flex justify-center items-center space-x-4 opacity-20">
-            <div className="h-[2px] w-24 bg-gradient-to-r from-transparent to-orange-950"></div>
-            <div className="h-3 w-3 rotate-45 border-2 border-orange-950"></div>
-            <div className="h-[2px] w-24 bg-gradient-to-l from-transparent to-orange-950"></div>
+          <div className="flex justify-center items-center space-x-6 opacity-20">
+            <div className="h-[1px] w-32 bg-gradient-to-r from-transparent to-white"></div>
+            <div className="h-2 w-2 rotate-45 border border-white"></div>
+            <div className="h-[1px] w-32 bg-gradient-to-l from-transparent to-white"></div>
           </div>
         </div>
       )}
@@ -50,17 +53,17 @@ const StoryBoard: React.FC<StoryBoardProps> = ({ segments, isLoading, title, onU
       </div>
 
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-20 space-y-6">
+        <div className="flex flex-col items-center justify-center py-24 space-y-8">
           <div className="relative">
-            <div className="absolute inset-0 bg-orange-400 blur-xl opacity-20 animate-pulse"></div>
-            <div className="flex space-x-3 relative">
-               <div className="h-3 w-3 bg-orange-600 rounded-full animate-bounce"></div>
-               <div className="h-3 w-3 bg-orange-600 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-               <div className="h-3 w-3 bg-orange-600 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+            <div className="absolute -inset-8 bg-indigo-500 blur-3xl opacity-10 animate-pulse"></div>
+            <div className="flex space-x-4 relative">
+               <div className="h-3.5 w-3.5 bg-indigo-500 rounded-full animate-bounce shadow-lg shadow-indigo-500/50"></div>
+               <div className="h-3.5 w-3.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s] shadow-lg shadow-indigo-500/50"></div>
+               <div className="h-3.5 w-3.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.4s] shadow-lg shadow-indigo-500/50"></div>
             </div>
           </div>
-          <p className="text-orange-900 text-xs font-black uppercase tracking-[0.4em] hindi-font animate-pulse">
-            शब्द बुने जा रहे हैं...
+          <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.6em] animate-pulse">
+            {t.loadingText}
           </p>
         </div>
       )}
