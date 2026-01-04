@@ -20,21 +20,13 @@ const EmptyState: React.FC<Props> = ({ onStart, isLoading, lang }) => {
   const colors = ["text-indigo-400", "text-purple-400", "text-emerald-400", "text-rose-400"];
 
   return (
-    <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto text-center px-4 space-y-16 py-12">
-      <div className="space-y-8">
-        <div className="relative inline-block">
-            <div className="absolute -inset-10 bg-indigo-500/20 blur-[80px] rounded-full animate-pulse"></div>
-            <div className="relative w-64 h-64 overflow-hidden rounded-[40px] shadow-3xl border-2 border-white/10 transform -rotate-1 hover:rotate-0 transition-all duration-700 ring-1 ring-white/5">
-               <img 
-                src="https://images.unsplash.com/photo-1505634467193-4b47000840bc?auto=format&fit=crop&q=80&w=400" 
-                alt="Story Atmosphere" 
-                className="w-full h-full object-cover grayscale brightness-75 hover:grayscale-0 transition-all duration-1000"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f1e] to-transparent opacity-60"></div>
-            </div>
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+    <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto text-center px-4 space-y-12 py-12">
+      <div className="space-y-6">
+        {/* Glow effect background */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+        
+        <div className="relative space-y-4">
+          <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-tight">
             {t.emptyTitle}
           </h2>
           <p className="text-lg text-slate-400 font-medium leading-relaxed max-w-lg mx-auto">
@@ -43,7 +35,7 @@ const EmptyState: React.FC<Props> = ({ onStart, isLoading, lang }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full relative z-10">
         {t.suggestions.map((item, idx) => (
           <button
             key={idx}
